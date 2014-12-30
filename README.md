@@ -1,4 +1,4 @@
-osql
+kQuery
 ====
 
-A SQL interface to your Linux internals
+A SQL interface to your Linux kernel
