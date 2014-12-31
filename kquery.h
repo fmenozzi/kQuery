@@ -1,8 +1,5 @@
-// COMP 530H - Fall 2014
-// Assignment 1
-// Halen Wooten
-//
-// I have neither given nor received unauthorized aid on this assignment.
+// kquery
+// Federico Menozzi and Halen Wooten
 
 #define MAX_CALL 100
 #define MAX_LINE 100
