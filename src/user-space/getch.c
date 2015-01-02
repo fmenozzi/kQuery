@@ -21,7 +21,7 @@ void reset_termios()
 /* Get char without echo */
 char getch() 
 {
-    char ch;
+    int ch;
     init_termios(0);    // Echo is off
     ch = getchar();
     reset_termios();
