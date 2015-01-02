@@ -64,6 +64,13 @@ int main()
             fprintf(stderr, "SQL error: %s\n", error_msg);
             sqlite3_free(error_msg);
         }
+
+        /* Reset table */
+        rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", error_msg);
+            sqlite3_free(error_msg);
+        }
     }
 
     sqlite3_close(db);
