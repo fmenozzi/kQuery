@@ -70,7 +70,7 @@ void process_get_row(char* buf)
         }
         
         // Put information in the response buffer
-        sprintf(buf, "%d,%s,%d,%ld,%x,%d,%d,%lu", pid, comm, parent_pid, state, flags, prio, num_vmas, total_vm);
+        sprintf(buf, "(%d,%s,%d,%ld,%x,%d,%d,%lu);", pid, comm, parent_pid, state, flags, prio, num_vmas, total_vm);
         current_process++;
     } else {
         // Reset data structures and clear out memory
