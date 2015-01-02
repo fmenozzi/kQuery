@@ -1,8 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <math.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "../../deps/sqlite/sqlite3.h"
+
+#include "../kernel-space/kquery_mod.h"
 
 #include "getch.h"
 
@@ -10,6 +18,13 @@
 
 #define DELETE 127
 #define BACKSPACE 8
+
+int fp;
+char the_file[256] = "/sys/kernel/debug/";
+char callbuf[MAX_CALL];  // Assumes no bufferline is longer
+char respbuf[MAX_RESP];  // Assumes no bufferline is longer
+
+void do_syscall(char *call_string);
 
 int get_query();
 
@@ -23,6 +38,15 @@ int main()
     int rc;
     char* create_stmt;
     char* error_msg = 0;
+
+    /* Open the file (module) */
+    strcat(the_file, dir_name);
+    strcat(the_file, "/");
+    strcat(the_file, file_name);
+    if ((fp = open (the_file, O_RDWR)) == -1) {
+        fprintf(stderr, "Error opening %s\n", the_file);
+        exit(-1);
+    }
 
     /* Open database */
     rc = sqlite3_open("kquery.db", &db);
@@ -52,11 +76,14 @@ int main()
     while (1) {
         fprintf(stdout, "kquery> ");
 
+        /* Get query from stdin */
         query[0] = '\0';
         if (get_query(query, MAX_QUERY_LEN) == -1)
             break;
 
-        // THIS IS WHERE WE'D POPULATE THE DB
+        /* Populate table */
+        do_syscall("process_get_row");  // First call returns number of rows
+
 
         /* Execute query */
         rc = sqlite3_exec(db, query, NULL, 0, &error_msg);
@@ -74,6 +101,8 @@ int main()
     }
 
     sqlite3_close(db);
+
+    close(fp);
 
     return 0;
 }
@@ -103,6 +132,8 @@ void backspace(char* str)
 /* Fill query string from stdin */
 int get_query(char* query, size_t max_query_len)
 {
+    // TODO: Recognize Ctrl-D as EOF and quit accordingly
+
     int i = 0, rc = 0;
     while (1) {
         char ch = getch();
@@ -122,11 +153,7 @@ int get_query(char* query, size_t max_query_len)
             insert_into_str(' ', query, i++, max_query_len);
             fprintf(stdout, "\n   ...> ");
             continue;
-        } /*else if (ch == ';') {
-            insert_into_str(';', query, i++, max_query_len);
-            fprintf(stdout, ";\n");
-            break;
-        } */else if (ch == DELETE || ch == BACKSPACE) {
+        } else if (ch == DELETE || ch == BACKSPACE) {
             if (i != 0) {
                 backspace(query);
                 fprintf(stdout, "\b\033[K"); // Backspace on terminal
@@ -138,6 +165,26 @@ int get_query(char* query, size_t max_query_len)
         }
     }
 
-    // TODO: Recognize Ctrl-D as EOF and quit accordingly
     return rc;
+}
+
+void do_syscall(char *call_string)
+{
+    int rc;
+
+    strcpy(callbuf, call_string);
+
+    rc = write(fp, callbuf, strlen(callbuf) + 1);
+    if (rc == -1) {
+        fprintf(stderr, "error writing %s\n", the_file);
+        fflush(stderr);
+        exit (-1);
+    }
+
+    rc = read(fp, respbuf, sizeof(respbuf));
+    if (rc == -1) {
+        fprintf(stderr, "error reading %s\n", the_file);
+        fflush(stderr);
+        exit (-1);
+    }
 }
