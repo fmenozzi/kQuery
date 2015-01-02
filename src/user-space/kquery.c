@@ -18,16 +18,49 @@ void backspace(char* str);
 
 int main()
 {
+    sqlite3* db;
     char query[MAX_QUERY_LEN];
+    int rc;
+    char* create_stmt;
+    char* error_msg = 0;
+
+    /* Open database */
+    rc = sqlite3_open("kquery.db", &db);
+    if (rc) {
+        fprintf(stderr, "Can't open kquery database: %s\n", sqlite3_errmsg(db));
+        exit(0);
+    }
+
+    /* Create Process table */
+    create_stmt = "CREATE TABLE IF NOT EXISTS Process ("
+                  "  pid        INT PRIMARY KEY,"
+                  "  name       TEXT,"
+                  "  parent_pid INT,"
+                  "  state      BIGINT,"
+                  "  flags      BIGINT,"
+                  "  priority   INT,"
+                  "  map_count  INT,"
+                  "  total_vm   BIGINT,"
+                  "  shared_vm  BIGINT,"
+                  "  exec_vm    BIGINT,"
+                  "  stack_vm   BIGINT"
+                  ")";
+    rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", error_msg);
+        sqlite3_free(error_msg);
+    }
 
     /* Enter REPL */
     while (1) {
-        printf("kquery> ");
+        fprintf(stdout, "kquery> ");
 
         query[0] = '\0';
         if (get_query(query, MAX_QUERY_LEN) == -1)
             break;
     }
+
+    sqlite3_close(db);
 
     return 0;
 }
@@ -62,25 +95,30 @@ int get_query(char* query, size_t max_query_len)
         char ch = getch();
 
         if (ch == '\n') {
+            if (strcmp(query, ".quit") == 0) {
+                fprintf(stdout, "\n");
+                break;
+            }
+
             insert_into_str(' ', query, i++, max_query_len);
-            printf("\n   ...> ");
+            fprintf(stdout, "\n   ...> ");
             continue;
         } else if (ch == ';') {
             insert_into_str(';', query, i++, max_query_len);
-            printf(";\n");
+            fprintf(stdout, ";\n");
             break;
         } else if (ch == DELETE || ch == BACKSPACE) {
             if (i != 0) {
                 backspace(query);
-                printf("\b\033[K"); // Backspace on terminal
+                fprintf(stdout, "\b\033[K"); // Backspace on terminal
                 i--;
             }
         } else {
             insert_into_str(ch, query, i++, max_query_len);
-            printf("%c", ch);
+            fprintf(stdout, "%c", ch);
         }
     }
 
     // TODO: Recognize Ctrl-D as EOF and quit accordingly
-    return feof(stdin) ? -1 : 0;
+    return strcmp(query, ".quit") == 0 ? -1 : 0;
 }
