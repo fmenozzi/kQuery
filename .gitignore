@@ -4,3 +4,7 @@ caller.c
 *.swp
 
 *.cmd
+
+src/kernel-space/.tmp_versions/kquery_mod.mod
+
+src/kernel-space/caller
