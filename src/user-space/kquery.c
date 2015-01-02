@@ -103,12 +103,18 @@ void backspace(char* str)
 /* Fill query string from stdin */
 int get_query(char* query, size_t max_query_len)
 {
-    int i = 0;
+    int i = 0, rc = 0;
     while (1) {
         char ch = getch();
 
         if (ch == '\n') {
             if (strcmp(query, ".quit") == 0) {
+                rc = -1;
+                fprintf(stdout, "\n");
+                break;
+            }
+
+            if (query[i-1] == ';') {
                 fprintf(stdout, "\n");
                 break;
             }
@@ -116,11 +122,11 @@ int get_query(char* query, size_t max_query_len)
             insert_into_str(' ', query, i++, max_query_len);
             fprintf(stdout, "\n   ...> ");
             continue;
-        } else if (ch == ';') {
+        } /*else if (ch == ';') {
             insert_into_str(';', query, i++, max_query_len);
             fprintf(stdout, ";\n");
             break;
-        } else if (ch == DELETE || ch == BACKSPACE) {
+        } */else if (ch == DELETE || ch == BACKSPACE) {
             if (i != 0) {
                 backspace(query);
                 fprintf(stdout, "\b\033[K"); // Backspace on terminal
@@ -133,5 +139,5 @@ int get_query(char* query, size_t max_query_len)
     }
 
     // TODO: Recognize Ctrl-D as EOF and quit accordingly
-    return strcmp(query, ".quit") == 0 ? -1 : 0;
+    return rc;
 }
