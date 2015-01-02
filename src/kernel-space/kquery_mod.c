@@ -54,11 +54,8 @@ void process_get_row(char* buf)
         // Memory fields
         // Initialize these fields in case mm is null
         struct mm_struct * mm;
-        int map_count = 0;
+        int num_vmas = 0;
         unsigned long total_vm = 0;
-        unsigned long shared_vm = 0;
-        unsigned long exec_vm = 0;
-        unsigned long stack_vm = 0;
 
         get_task_comm(comm, task);
 
@@ -67,16 +64,13 @@ void process_get_row(char* buf)
 
         if (mm != NULL) {
             down_read(&mm->mmap_sem);
-                map_count = mm->map_count;
-                total_vm = mm->total_vm;
-                shared_vm = mm->shared_vm;
-                exec_vm = mm->exec_vm;
-                stack_vm = mm->stack_vm;
+                num_vmas = mm->map_count;
+                total_vm = mm->total_vm; // Pages mapped
             up_read(&mm->mmap_sem);
         }
         
         // Put information in the response buffer
-        sprintf(buf, "%d,%s,%d,%ld,%x,%d,%d,%lu,%lu,%lu,%lu", pid, comm, parent_pid, state, flags, prio, map_count, total_vm, shared_vm, exec_vm, stack_vm);
+        sprintf(buf, "%d,%s,%d,%ld,%x,%d,%d,%lu", pid, comm, parent_pid, state, flags, prio, num_vmas, total_vm);
         current_process++;
     } else {
         // Reset data structures and clear out memory
