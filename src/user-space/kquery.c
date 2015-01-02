@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../../deps/sqlite/sqlite3.h"
+
 #include "getch.h"
 
 #define MAX_QUERY_LEN 256
@@ -9,7 +11,7 @@
 #define DELETE 127
 #define BACKSPACE 8
 
-int  get_query();
+int get_query();
 
 void insert_into_str(char c, char* str, size_t pos, size_t max_len);
 void backspace(char* str);
@@ -79,5 +81,6 @@ int get_query(char* query, size_t max_query_len)
         }
     }
 
+    // TODO: Recognize Ctrl-D as EOF and quit accordingly
     return feof(stdin) ? -1 : 0;
 }
