@@ -39,9 +39,8 @@ int main()
     char query[MAX_QUERY_LEN];
     int rc;
     char* create_stmt;
-    char insert_stmt[100 + MAX_RESP] = "INSERT INTO Process VALUES ";
+    //char insert_stmt[100 + MAX_RESP] = "INSERT INTO Process VALUES ";
     char* error_msg = 0;
-    int num_rows;
 
     /* Open the file (module) */
     strcat(the_file, dir_name);
@@ -87,14 +86,14 @@ int main()
 
         /* Populate table */
         do_syscall("process_get_row");  // First call returns number of rows
-        num_rows = atoi(respbuf);
-        while (num_rows-- > 0) {
+        while (strcmp(respbuf, "")) {
             /* Fetch row */
             do_syscall("process_get_row");  // Subsequent calls fetch rows
-            strcat(insert_stmt, respbuf);
-
+            //strcpy(insert_stmt, respbuf);
+            printf("%s\n", respbuf);
+            
             /* Insert row into table */
-            rc = sqlite3_exec(db, insert_stmt, insert_callback, 0, &error_msg);
+            rc = sqlite3_exec(db, respbuf, insert_callback, 0, &error_msg);
             if (rc != SQLITE_OK) {
                 fprintf(stderr, "SQL error: %s\n", error_msg);
                 sqlite3_free(error_msg);
