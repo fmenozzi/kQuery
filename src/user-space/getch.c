@@ -3,7 +3,8 @@
 #include <stdio.h>
 
 /* Initialize newterm terminal I/O settings */
-void init_termios(int echo) {
+void init_termios(int echo) 
+{
     tcgetattr(0, &oldterm);                     // Grab oldterm terminal I/O settings 
     newterm = oldterm;                          // Make newterm settings same as oldterm settings
     newterm.c_lflag &= ~ICANON;                 // Disable buffered I/O
@@ -12,12 +13,14 @@ void init_termios(int echo) {
 }
 
 /* Restore oldterm terminal I/O settings */
-void reset_termios() {
+void reset_termios() 
+{
     tcsetattr(0, TCSANOW, &oldterm);
 }
 
 /* Get char without echo */
-char getch() {
+char getch() 
+{
     char ch;
     init_termios(0);    // Echo is off
     ch = getchar();
