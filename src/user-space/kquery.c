@@ -26,6 +26,8 @@ char respbuf[MAX_RESP];  // Assumes no bufferline is longer
 
 void do_syscall(char *call_string);
 
+int insert_callback(void *NotUsed, int argc, char **argv, char **azColName);
+
 int get_query();
 
 void insert_into_str(char c, char* str, size_t pos, size_t max_len);
@@ -37,7 +39,9 @@ int main()
     char query[MAX_QUERY_LEN];
     int rc;
     char* create_stmt;
+    char insert_stmt[100 + MAX_RESP] = "INSERT INTO Process VALUES ";
     char* error_msg = 0;
+    int num_rows;
 
     /* Open the file (module) */
     strcat(the_file, dir_name);
@@ -83,7 +87,19 @@ int main()
 
         /* Populate table */
         do_syscall("process_get_row");  // First call returns number of rows
+        num_rows = atoi(respbuf);
+        while (num_rows-- > 0) {
+            /* Fetch row */
+            do_syscall("process_get_row");  // Subsequent calls fetch rows
+            strcat(insert_stmt, respbuf);
 
+            /* Insert row into table */
+            rc = sqlite3_exec(db, insert_stmt, insert_callback, 0, &error_msg);
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", error_msg);
+                sqlite3_free(error_msg);
+            }
+        }
 
         /* Execute query */
         rc = sqlite3_exec(db, query, NULL, 0, &error_msg);
@@ -166,6 +182,15 @@ int get_query(char* query, size_t max_query_len)
     }
 
     return rc;
+}
+
+int insert_callback(void *NotUsed, int argc, char **argv, char **azColName) {
+    int i;
+    for (i = 0; i < argc; i++){
+        fprintf(stdout, "%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;
 }
 
 void do_syscall(char *call_string)
