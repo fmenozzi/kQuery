@@ -1,5 +1,5 @@
 #! /bin/bash
 
-./unmake
+./unmake.sh
 make
-sudo insmod kquery.ko
+sudo insmod kquery_mod.ko

@@ -1,4 +1,4 @@
-obj-m += kquery.o
+obj-m += kquery_mod.o
 
 K=$(shell uname -r)
 M=$(PWD)

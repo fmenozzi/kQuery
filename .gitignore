@@ -1,2 +1,6 @@
 
 caller.c
+
+*.swp
+
+*.cmd
