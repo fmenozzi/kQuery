@@ -39,11 +39,8 @@ int main()
                   "  state      BIGINT,"
                   "  flags      BIGINT,"
                   "  priority   INT,"
-                  "  map_count  INT,"
-                  "  total_vm   BIGINT,"
-                  "  shared_vm  BIGINT,"
-                  "  exec_vm    BIGINT,"
-                  "  stack_vm   BIGINT"
+                  "  num_vmas   INT,"
+                  "  total_vm   BIGINT"
                   ")";
     rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
     if (rc != SQLITE_OK) {
@@ -58,6 +55,15 @@ int main()
         query[0] = '\0';
         if (get_query(query, MAX_QUERY_LEN) == -1)
             break;
+
+        // THIS IS WHERE WE'D POPULATE THE DB
+
+        /* Execute query */
+        rc = sqlite3_exec(db, query, NULL, 0, &error_msg);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", error_msg);
+            sqlite3_free(error_msg);
+        }
     }
 
     sqlite3_close(db);
