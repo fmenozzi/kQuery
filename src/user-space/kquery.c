@@ -51,7 +51,7 @@ int main()
     }
 
     /* Open database */
-    rc = sqlite3_open("kquery.db", &db);
+    rc = sqlite3_open(NULL, &db);   // NULL filepath creates an in-memory database
     if (rc) {
         fprintf(stderr, "Can't open kquery database: %s\n", sqlite3_errmsg(db));
         exit(0);
