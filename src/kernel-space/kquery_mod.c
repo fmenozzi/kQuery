@@ -70,7 +70,7 @@ void process_get_row(char* buf)
         }
         
         // Put information in the response buffer
-        sprintf(buf, "INSERT INTO Process VALUES (%d,'%s',%d,%ld,%lu,%d,%d,%lu);", pid, comm, parent_pid, state, flags, prio, num_vmas, total_vm);
+        sprintf(buf, "INSERT INTO Process VALUES (%d,'%s',%d,%ld,%u,%d,%d,%lu);", pid, comm, parent_pid, state, flags, prio, num_vmas, total_vm);
         current_process++;
     } else {
         // Reset data structures and clear out memory

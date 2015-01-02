@@ -14,3 +14,15 @@ src/user-space/a.out
 src/user-space/kquery
 
 src/user-space/kquery.db
+
+*.ko
+
+src/kernel-space/kquery_mod.mod.c
+
+src/kernel-space/kquery_mod.o
+
+src/kernel-space/Module.symvers
+
+src/kernel-space/modules.order
+
+src/kernel-space/kquery_mod.mod.o
