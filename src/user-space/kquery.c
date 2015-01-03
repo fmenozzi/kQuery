@@ -62,23 +62,6 @@ int main()
         exit(0);
     }
 
-    /* Create Process table */
-    create_stmt = "CREATE TABLE IF NOT EXISTS Process ("
-                  "  pid        INT PRIMARY KEY,"
-                  "  name       TEXT,"
-                  "  parent_pid INT,"
-                  "  state      BIGINT,"
-                  "  flags      BIGINT,"
-                  "  priority   INT,"
-                  "  num_vmas   INT,"
-                  "  total_vm   BIGINT"
-                  ")";
-    rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", error_msg);
-        sqlite3_free(error_msg);
-    }
-
     /* Enter REPL */
     while (1) {
         fprintf(stdout, "kquery> ");
@@ -87,6 +70,23 @@ int main()
         query[0] = '\0';
         if (get_query(query, MAX_QUERY_LEN) == -1)
             break;
+
+        /* Create Process table (in case user does some stupid query to delete it) */
+        create_stmt = "CREATE TABLE IF NOT EXISTS Process ("
+                      "  pid        INT PRIMARY KEY,"
+                      "  name       TEXT,"
+                      "  parent_pid INT,"
+                      "  state      BIGINT,"
+                      "  flags      BIGINT,"
+                      "  priority   INT,"
+                      "  num_vmas   INT,"
+                      "  total_vm   BIGINT"
+                      ")";
+        rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", error_msg);
+            sqlite3_free(error_msg);
+        }
 
         /* Populate table */
         do_syscall("process_get_row");  // First call returns number of rows
@@ -124,6 +124,7 @@ int main()
     return 0;
 }
 
+/* Insert c into str at index pos */
 void insert_into_str(char c, char* str, size_t pos, size_t max_len)
 {
     int char_fits = pos   < max_len;
@@ -141,6 +142,7 @@ void insert_into_str(char c, char* str, size_t pos, size_t max_len)
     }
 }
 
+/* Remove last char in str */
 void backspace(char* str)
 {
     str[strlen(str) - 1] = '\0';
