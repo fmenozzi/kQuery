@@ -150,7 +150,7 @@ int get_query(char* query, size_t max_query_len)
 //
 //--------------------------------------------------------------------------//
 
-//---------------------------- DATABASE CALLBACK ---------------------------//
+//--------------------------- DATABASE CALLBACKS ---------------------------//
 //
 /* Callback function for table inserts */
 int insert_callback(void *NotUsed, int argc, char **argv, char **azColName) {
