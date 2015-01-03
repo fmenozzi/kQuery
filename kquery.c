@@ -11,9 +11,9 @@
 
 #include "sqlite3.h"
 
-#include "../kernel-space/kquery_mod.h"
+#include "module/kquery_mod.h"
 
-#define MAX_QUERY_LEN 256
+#define MAX_QUERY_LEN 512
 
 #define DELETE 127
 #define BACKSPACE 8
