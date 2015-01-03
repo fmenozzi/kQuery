@@ -38,3 +38,6 @@ A SQL interface to your Linux kernel. Think of it like a Linux-only [osquery](ht
 ## Future Features
 * Extra shell commands (`.tables`, `.schema`, etc.)
 * More tables
+
+## License
+kQuery is licensed under the [GNU General Public License, version 2](https://www.gnu.org/licenses/gpl-2.0.html).
