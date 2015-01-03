@@ -37,14 +37,14 @@ void do_syscall(char *call_string)
     if (rc == -1) {
         fprintf(stderr, "error writing %s\n", the_file);
         fflush(stderr);
-        exit (-1);
+        exit(-1);
     }
 
     rc = read(fp, respbuf, sizeof(respbuf));
     if (rc == -1) {
         fprintf(stderr, "error reading %s\n", the_file);
         fflush(stderr);
-        exit (-1);
+        exit(-1);
     }
 }
 //
@@ -178,7 +178,7 @@ int main()
     strcat(the_file, dir_name);
     strcat(the_file, "/");
     strcat(the_file, file_name);
-    if ((fp = open (the_file, O_RDWR)) == -1) {
+    if ((fp = open(the_file, O_RDWR)) == -1) {
         fprintf(stderr, "Error opening %s\n", the_file);
         exit(-1);
     }
