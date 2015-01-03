@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 #include <unistd.h>
 #include <math.h>
 #include <sys/time.h>
@@ -8,11 +9,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "../../deps/sqlite/sqlite3.h"
+#include "sqlite3.h"
 
 #include "../kernel-space/kquery_mod.h"
-
-#include "getch.h"
 
 #define MAX_QUERY_LEN 256
 
@@ -24,6 +23,8 @@ char the_file[256] = "/sys/kernel/debug/";
 char callbuf[MAX_CALL];  // Assumes no bufferline is longer
 char respbuf[MAX_RESP];  // Assumes no bufferline is longer
 
+struct termios oldterm, newterm;
+
 void do_syscall(char *call_string);
 
 int insert_callback(void *NotUsed, int argc, char **argv, char **azColName);
@@ -32,6 +33,10 @@ int get_query();
 
 void insert_into_str(char c, char* str, size_t pos, size_t max_len);
 void backspace(char* str);
+
+void init_termios(int echo);
+void reset_termios();
+char getch();
 
 int main()
 {
@@ -210,4 +215,30 @@ void do_syscall(char *call_string)
         fflush(stderr);
         exit (-1);
     }
+}
+
+/* Initialize newterm terminal I/O settings */
+void init_termios(int echo) 
+{
+    tcgetattr(0, &oldterm);                     // Grab oldterm terminal I/O settings 
+    newterm = oldterm;                          // Make newterm settings same as oldterm settings
+    newterm.c_lflag &= ~ICANON;                 // Disable buffered I/O
+    newterm.c_lflag &= echo ? ECHO : ~ECHO;     // Set echo mode
+    tcsetattr(0, TCSANOW, &newterm);            // Use these newterm terminal I/O settings now
+}
+
+/* Restore oldterm terminal I/O settings */
+void reset_termios() 
+{
+    tcsetattr(0, TCSANOW, &oldterm);
+}
+
+/* Get char without echo */
+char getch() 
+{
+    int ch;
+    init_termios(0);    // Echo is off
+    ch = getchar();
+    reset_termios();
+    return ch;
 }
