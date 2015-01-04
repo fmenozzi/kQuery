@@ -73,7 +73,6 @@ void do_syscall(char *call_string)
 
 //----------------------- IMPLEMENTATION OF getch() ------------------------//
 //
-
 /* Get char without echo */
 char getch() 
 {
