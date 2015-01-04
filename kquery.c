@@ -165,7 +165,7 @@ int get_query(char* query, size_t max_query_len)
 //--------------------------- DATABASE CALLBACKS ---------------------------//
 //
 /* Callback function for table inserts */
-int insert_callback(void *NotUsed, int argc, char **argv, char **azColName) {
+int query_callback(void *NotUsed, int argc, char **argv, char **azColName) {
     int i;
     for (i = 0; i < argc; i++){
         fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
@@ -243,7 +243,7 @@ int main()
         }
 
         /* Execute query */
-        rc = sqlite3_exec(db, query, insert_callback, 0, &error_msg);
+        rc = sqlite3_exec(db, query, query_callback, 0, &error_msg);
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", error_msg);
             sqlite3_free(error_msg);
