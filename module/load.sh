@@ -1,5 +1,5 @@
 #! /bin/bash
 
-./unmake.sh
+./unload.sh
 make
 sudo insmod kquery_mod.ko
