@@ -172,7 +172,7 @@ int insert_callback(void *NotUsed, int argc, char **argv, char **azColName) {
         if (i != argc-1)
             fprintf(stdout, "|");
     }
-    printf("\n");
+    fprintf(stdout, "\n");
     return 0;
 }
 //
