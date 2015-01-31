@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>kQuery by fmenozzi</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">kQuery</h1>
+        <p class="header">A SQL interface to your Linux kernel</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/fmenozzi/kQuery/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/fmenozzi/kQuery/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/fmenozzi/kQuery">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/fmenozzi">fmenozzi</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a id="kquery" class="anchor" href="#kquery" aria-hidden="true"><span class="octicon octicon-link"></span></a>kQuery</h1>
+
+<p>A SQL interface to your Linux kernel. Think of it like a Linux-only <a href="http://osquery.io">osquery</a>, but with fewer and less-robust tables (but we don't require vagrant or VMs, so we got that going for us, which is nice).</p>
+
+<h2>
+<a id="building-from-source" class="anchor" href="#building-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building from Source</h2>
+
+<ol>
+<li>
+<p>First, we have to load the kernel module. Navigate to the <code>module</code> directory and execute the following commands:</p>
+
+<pre><code>  $ make
+  $ sudo insmod kquery_mod.ko
+</code></pre>
+
+<p>Alternatively, the scripts <code>load.sh</code> (and <code>unload.sh</code>) are provided for your convenience.</p>
+</li>
+<li>
+<p>Next, we need to compile the user program:</p>
+
+<pre><code>  $ gcc sqlite3.c kquery.c -o kquery -Wall -lpthread -ldl
+</code></pre>
+</li>
+<li>
+<p>To run the shell, execute:</p>
+
+<pre><code>  $ sudo ./kquery
+</code></pre>
+</li>
+</ol>
+
+<h2>
+<a id="current-features" class="anchor" href="#current-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Current Features</h2>
+
+<ul>
+<li>
+<code>.quit</code> to exit the shell</li>
+<li>
+<p>The following tables:</p>
+
+<ul>
+<li>
+<p><strong>Process</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pid</td>
+<td>INT PRIMARY KEY</td>
+</tr>
+<tr>
+<td>name</td>
+<td>TEXT</td>
+</tr>
+<tr>
+<td>parent_pid</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>state</td>
+<td>BIGINT</td>
+</tr>
+<tr>
+<td>flags</td>
+<td>BIGINT</td>
+</tr>
+<tr>
+<td>priority</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>num_vmas</td>
+<td>INT</td>
+</tr>
+<tr>
+<td>total_vm</td>
+<td>BIGINT</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</li>
+</ul>
+
+<h2>
+<a id="future-features" class="anchor" href="#future-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>Future Features</h2>
+
+<ul>
+<li>Extra shell commands (<code>.tables</code>, <code>.schema</code>, etc.)</li>
+<li>More tables</li>
+</ul>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span class="octicon octicon-link"></span></a>License</h2>
+
+<p>kQuery is licensed under the <a href="https://www.gnu.org/licenses/gpl-2.0.html">GNU General Public License, version 2</a>.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
