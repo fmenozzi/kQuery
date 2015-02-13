@@ -30,14 +30,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <ncurses.h>
+
 #include "sqlite3.h"
 
 #include "module/kquery_mod.h"
 
 #define MAX_QUERY_LEN 512
 
-#define DELETE 127
-#define BACKSPACE 8
+#define CONTROL(x) ((x) & 0x1F)
 
 //----------------------- INTERFACE TO KERNEL MODULE -----------------------//
 //
@@ -48,7 +49,7 @@ char callbuf[MAX_CALL];  // Assumes no bufferline is longer
 char respbuf[MAX_RESP];  // Assumes no bufferline is longer
 
 /* Interface for performing "system calls" into kernel module */
-void do_syscall(char *call_string)
+int do_syscall(char *call_string)
 {
     int rc;
 
@@ -56,41 +57,19 @@ void do_syscall(char *call_string)
 
     rc = write(fp, callbuf, strlen(callbuf) + 1);
     if (rc == -1) {
-        fprintf(stderr, "error writing %s\n", the_file);
-        fflush(stderr);
-        exit(-1);
+        printw("error writing %s\n", the_file);
+        refresh();
+        return rc;
     }
 
     rc = read(fp, respbuf, sizeof(respbuf));
     if (rc == -1) {
-        fprintf(stderr, "error reading %s\n", the_file);
-        fflush(stderr);
-        exit(-1);
+        printw("error reading %s\n", the_file);
+        refresh();
+        return rc;
     }
-}
-//
-//--------------------------------------------------------------------------//
 
-//----------------------- IMPLEMENTATION OF getch() ------------------------//
-//
-/* Get char without echo */
-char getch() 
-{
-    static struct termios oldterm, newterm;
-
-    int ch;
-
-    tcgetattr(0, &oldterm);                     // Grab oldterm terminal I/O settings 
-    newterm = oldterm;                          // Make newterm settings same as oldterm settings
-    newterm.c_lflag &= ~ICANON;                 // Disable buffered I/O
-    newterm.c_lflag &= ~ECHO;                   // Set echo mode to OFF
-    tcsetattr(0, TCSANOW, &newterm);            // Use these newterm terminal I/O settings now
-
-    ch = getchar();
-
-    tcsetattr(0, TCSANOW, &oldterm);            // Restore oldterm terminal I/O settings
-
-    return ch;
+    return rc;
 }
 //
 //--------------------------------------------------------------------------//
@@ -128,32 +107,44 @@ int get_query(char* query, size_t max_query_len)
 
     int i = 0, rc = 0;
     while (1) {
-        char ch = getch();
+        int ch = getch();
+        if (ch == EOF || ch == CONTROL('d')) {
+            rc = -1;
+            break;
+        }
 
         if (ch == '\n') {
             if (strcmp(query, ".quit") == 0) {
                 rc = -1;
-                fprintf(stdout, "\n");
+                printw("\n");
+                refresh();
                 break;
             }
 
             if (query[i-1] == ';') {
-                fprintf(stdout, "\n");
+                printw("\n");
+                refresh();
                 break;
             }
 
             insert_into_str(' ', query, i++, max_query_len);
-            fprintf(stdout, "\n   ...> ");
+            printw("\n   ...> ");
+            refresh();
             continue;
-        } else if (ch == DELETE || ch == BACKSPACE) {
+        } else if (ch == KEY_BACKSPACE) {
             if (i != 0) {
                 backspace(query);
-                fprintf(stdout, "\b\033[K"); // Backspace on terminal
+
+                addch('\b');
+                delch();
+                refresh();
+
                 i--;
             }
         } else {
             insert_into_str(ch, query, i++, max_query_len);
-            fprintf(stdout, "%c", ch);
+            printw("%c", ch);
+            refresh();
         }
     }
 
@@ -165,14 +156,20 @@ int get_query(char* query, size_t max_query_len)
 //--------------------------- DATABASE CALLBACKS ---------------------------//
 //
 /* Callback function for table inserts */
-int query_callback(void *NotUsed, int argc, char **argv, char **azColName) {
+int query_callback(void *NotUsed, int argc, char **argv, char **azColName) 
+{
     int i;
     for (i = 0; i < argc; i++){
-        fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
-        if (i != argc-1)
-            fprintf(stdout, "|");
+        printw("%s", argv[i] ? argv[i] : "NULL");
+        refresh();
+        if (i != argc-1) {
+            printw("|");
+            refresh();
+        }
     }
-    fprintf(stdout, "\n");
+    printw("\n");
+    refresh();
+
     return 0;
 }
 //
@@ -199,12 +196,20 @@ int main()
     rc = sqlite3_open(NULL, &db);   // NULL filepath creates an in-memory database
     if (rc) {
         fprintf(stderr, "Can't open kquery database: %s\n", sqlite3_errmsg(db));
-        exit(0);
+        exit(-1);
     }
+
+    /* Initialize ncurses */
+    initscr();
+    keypad(stdscr, TRUE);
+    cbreak();
+    noecho();
+    scrollok(stdscr, TRUE);
 
     /* Enter REPL */
     while (1) {
-        fprintf(stdout, "kquery> ");
+        printw("kquery> ");
+        refresh();
 
         /* Get query from stdin */
         query[0] = '\0';
@@ -224,20 +229,27 @@ int main()
                       ")";
         rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", error_msg);
+            //fprintf(stderr, "SQL error: %s\n", error_msg);
+            printw("SQL error: %s\n", error_msg);
+            refresh();
             sqlite3_free(error_msg);
         }
 
         /* Populate table */
-        do_syscall("process_get_row");  // First call returns number of rows
+        rc = do_syscall("process_get_row");  // First call returns number of rows
+        if (rc == -1)
+            break;
         while (strcmp(respbuf, "")) {
             /* Fetch row */
-            do_syscall("process_get_row");  // Subsequent calls fetch rows
+            rc = do_syscall("process_get_row");  // Subsequent calls fetch rows
+            if (rc == -1)
+                break;
             
             /* Insert row into table */
             rc = sqlite3_exec(db, respbuf, NULL, 0, &error_msg);
             if (rc != SQLITE_OK) {
-                fprintf(stderr, "SQL error: %s\n", error_msg);
+                printw("SQL error: %s\n", error_msg);
+                refresh();
                 sqlite3_free(error_msg);
             }
         }
@@ -245,21 +257,24 @@ int main()
         /* Execute query */
         rc = sqlite3_exec(db, query, query_callback, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", error_msg);
+            printw("SQL error: %s\n", error_msg);
+            refresh();
             sqlite3_free(error_msg);
         }
 
         /* Reset table */
         rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", error_msg);
+            printw("SQL error: %s\n", error_msg);
+            refresh();
             sqlite3_free(error_msg);
         }
     }
 
+	/* Cleanup */
     sqlite3_close(db);
-
     close(fp);
+	endwin();
 
     return 0;
 }
