@@ -13,14 +13,14 @@ A SQL interface to your Linux kernel. Think of it like a Linux-only [osquery](ht
     
 2. Next, we need to compile the user program:
 
-          $ gcc sqlite3.c kquery.c -o kquery -Wall -lpthread -ldl
+          $ gcc sqlite3.c kquery.c -o kquery -lpthread -ldl -lncurses
 
 3. To run the shell, execute:
         
           $ sudo ./kquery
 
 ## Current Features
-  * `.quit` to exit the shell
+  * `.quit` and `CTRL-D` to exit the shell
   * The following tables:
       * **Process**
     
