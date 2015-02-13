@@ -103,9 +103,9 @@ void backspace(char* str)
 /* Fill query string from stdin */
 int get_query(char* query, size_t max_query_len)
 {
-    // TODO: Recognize Ctrl-D as EOF and quit accordingly
-
     int i = 0, rc = 0;
+
+    attron(A_BOLD);
     while (1) {
         int ch = getch();
         if (ch == EOF || ch == CONTROL('d')) {
@@ -147,6 +147,7 @@ int get_query(char* query, size_t max_query_len)
             refresh();
         }
     }
+    attroff(A_BOLD);
 
     return rc;
 }
@@ -201,6 +202,9 @@ int main()
 
     /* Initialize ncurses */
     initscr();
+    start_color();
+    use_default_colors();
+    init_pair(1, COLOR_GREEN, -1);
     keypad(stdscr, TRUE);
     cbreak();
     noecho();
@@ -208,8 +212,12 @@ int main()
 
     /* Enter REPL */
     while (1) {
+        attron(A_BOLD);
+        attron(COLOR_PAIR(1));
         printw("kquery> ");
         refresh();
+        attroff(A_BOLD);
+        attroff(COLOR_PAIR(1));
 
         /* Get query from stdin */
         query[0] = '\0';
