@@ -183,6 +183,7 @@ int main()
     strcat(the_file, file_name);
     if ((fp = open(the_file, O_RDWR)) == -1) {
         fprintf(stderr, "Error opening %s\n", the_file);
+        close(fp);
         exit(-1);
     }
 
@@ -190,6 +191,8 @@ int main()
     rc = sqlite3_open(NULL, &db);   // NULL filepath creates an in-memory database
     if (rc) {
         fprintf(stderr, "Can't open kquery database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        close(fp);
         exit(-1);
     }
 
