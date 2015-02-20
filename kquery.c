@@ -40,6 +40,8 @@
 
 #define CONTROL(x) ((x) & 0x1F)
 
+#define K_PRINT(...) printw(__VA_ARGS__);refresh();
+
 //----------------------- INTERFACE TO KERNEL MODULE -----------------------//
 //
 /* Global vars for use in interface to module */
@@ -57,15 +59,13 @@ int k_DoSyscall(char *call_string)
 
     rc = write(fp, callbuf, strlen(callbuf) + 1);
     if (rc == -1) {
-        printw("error writing %s\n", the_file);
-        refresh();
+        K_PRINT("Error writing %s\n", the_file);
         return rc;
     }
 
     rc = read(fp, respbuf, sizeof(respbuf));
     if (rc == -1) {
-        printw("error reading %s\n", the_file);
-        refresh();
+        K_PRINT("Error reading %s\n", the_file);
         return rc;
     }
 
@@ -116,20 +116,18 @@ int k_GetQuery(char* query, size_t max_query_len)
         if (ch == '\n') {
             if (strcmp(query, ".quit") == 0) {
                 rc = -1;
-                printw("\n");
-                refresh();
+                K_PRINT("\n");
                 break;
             }
 
             if (query[i-1] == ';') {
-                printw("\n");
-                refresh();
+                K_PRINT("\n");
                 break;
             }
 
             k_InsertIntoStr(' ', query, i++, max_query_len);
-            printw("\n   ...> ");
-            refresh();
+            K_PRINT("\n   ...> ");
+
             continue;
         } else if (ch == KEY_BACKSPACE) {
             if (i != 0) {
@@ -143,8 +141,7 @@ int k_GetQuery(char* query, size_t max_query_len)
             }
         } else {
             k_InsertIntoStr(ch, query, i++, max_query_len);
-            printw("%c", ch);
-            refresh();
+            K_PRINT("%c", ch);
         }
     }
     attroff(A_BOLD);
@@ -161,15 +158,11 @@ int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
     int i;
     for (i = 0; i < argc; i++){
-        printw("%s", argv[i] ? argv[i] : "NULL");
-        refresh();
-        if (i != argc-1) {
-            printw("|");
-            refresh();
-        }
+        K_PRINT("%s", argv[i] ? argv[i] : "NULL");
+        if (i != argc-1)
+            K_PRINT("|");
     }
-    printw("\n");
-    refresh();
+    K_PRINT("\n");
 
     return 0;
 }
@@ -215,8 +208,7 @@ int main()
         /* Print prompt */
         attron(A_BOLD);
         attron(COLOR_PAIR(1));
-        printw("kquery> ");
-        refresh();
+        K_PRINT("kquery> ");
         attroff(A_BOLD);
         attroff(COLOR_PAIR(1));
 
@@ -238,8 +230,7 @@ int main()
                       ")";
         rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            printw("SQL error: %s\n", error_msg);
-            refresh();
+            K_PRINT("SQL error : %s\n", error_msg);
             sqlite3_free(error_msg);
         }
 
@@ -256,8 +247,7 @@ int main()
             /* Insert row into table */
             rc = sqlite3_exec(db, respbuf, NULL, 0, &error_msg);
             if (rc != SQLITE_OK) {
-                printw("SQL error: %s\n", error_msg);
-                refresh();
+                K_PRINT("SQL error: %s\n", error_msg);
                 sqlite3_free(error_msg);
             }
         }
@@ -265,16 +255,14 @@ int main()
         /* Execute query */
         rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            printw("SQL error: %s\n", error_msg);
-            refresh();
+            K_PRINT("SQL error: %s\n", error_msg);
             sqlite3_free(error_msg);
         }
 
         /* Reset table */
         rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            printw("SQL error: %s\n", error_msg);
-            refresh();
+            K_PRINT("SQL error: %s\n", error_msg);
             sqlite3_free(error_msg);
         }
     }
