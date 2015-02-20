@@ -49,7 +49,7 @@ char callbuf[MAX_CALL];  // Assumes no bufferline is longer
 char respbuf[MAX_RESP];  // Assumes no bufferline is longer
 
 /* Interface for performing "system calls" into kernel module */
-int do_syscall(char *call_string)
+int k_DoSyscall(char *call_string)
 {
     int rc;
 
@@ -77,7 +77,7 @@ int do_syscall(char *call_string)
 //------------------- ACQUIRING QUERY STRING FROM CONSOLE ------------------//
 //
 /* Insert c into str at index pos */
-void insert_into_str(char c, char* str, size_t pos, size_t max_len)
+void k_InsertIntoStr(char c, char* str, size_t pos, size_t max_len)
 {
     int char_fits = pos   < max_len;
     int null_fits = pos+1 < max_len;
@@ -95,13 +95,13 @@ void insert_into_str(char c, char* str, size_t pos, size_t max_len)
 }
 
 /* Remove last char in str */
-void backspace(char* str)
+void k_Backspace(char* str)
 {
     str[strlen(str) - 1] = '\0';
 }
 
 /* Fill query string from stdin */
-int get_query(char* query, size_t max_query_len)
+int k_GetQuery(char* query, size_t max_query_len)
 {
     int i = 0, rc = 0;
 
@@ -127,13 +127,13 @@ int get_query(char* query, size_t max_query_len)
                 break;
             }
 
-            insert_into_str(' ', query, i++, max_query_len);
+            k_InsertIntoStr(' ', query, i++, max_query_len);
             printw("\n   ...> ");
             refresh();
             continue;
         } else if (ch == KEY_BACKSPACE) {
             if (i != 0) {
-                backspace(query);
+                k_Backspace(query);
 
                 addch('\b');
                 delch();
@@ -142,7 +142,7 @@ int get_query(char* query, size_t max_query_len)
                 i--;
             }
         } else {
-            insert_into_str(ch, query, i++, max_query_len);
+            k_InsertIntoStr(ch, query, i++, max_query_len);
             printw("%c", ch);
             refresh();
         }
@@ -157,7 +157,7 @@ int get_query(char* query, size_t max_query_len)
 //--------------------------- DATABASE CALLBACKS ---------------------------//
 //
 /* Callback function for query execution */
-int query_callback(void *NotUsed, int argc, char **argv, char **azColName) 
+int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName) 
 {
     int i;
     for (i = 0; i < argc; i++){
@@ -222,7 +222,7 @@ int main()
 
         /* Get query from stdin */
         query[0] = '\0';
-        if (get_query(query, MAX_QUERY_LEN) == -1)
+        if (k_GetQuery(query, MAX_QUERY_LEN) == -1)
             break;
 
         /* Create Process table (in case user does some stupid query to delete it) */
@@ -244,12 +244,12 @@ int main()
         }
 
         /* Populate table */
-        rc = do_syscall("process_get_row");  // First call returns number of rows
+        rc = k_DoSyscall("process_get_row");  // First call returns number of rows
         if (rc == -1)
             break;
         while (strcmp(respbuf, "")) {
             /* Fetch row */
-            rc = do_syscall("process_get_row");  // Subsequent calls fetch rows
+            rc = k_DoSyscall("process_get_row");  // Subsequent calls fetch rows
             if (rc == -1)
                 break;
             
@@ -263,7 +263,7 @@ int main()
         }
 
         /* Execute query */
-        rc = sqlite3_exec(db, query, query_callback, 0, &error_msg);
+        rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
         if (rc != SQLITE_OK) {
             printw("SQL error: %s\n", error_msg);
             refresh();
