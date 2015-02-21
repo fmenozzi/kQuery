@@ -30,8 +30,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <ncurses.h>
-
 #include "sqlite3.h"
 
 #include "module/kquery_mod.h"
@@ -40,7 +38,12 @@
 
 #define CONTROL(x) ((x) & 0x1F)
 
-#define K_PRINT(...) printw(__VA_ARGS__);refresh();
+#define DELETE 127
+#define BACKSPACE 8
+
+#define MAKE_GREEN "\e[32m"
+#define MAKE_RED "\e[31m"
+#define RESET_COLOR "\e[m"
 
 //----------------------- INTERFACE TO KERNEL MODULE -----------------------//
 //
@@ -59,17 +62,40 @@ int k_DoSyscall(char *call_string)
 
     rc = write(fp, callbuf, strlen(callbuf) + 1);
     if (rc == -1) {
-        K_PRINT("Error writing %s\n", the_file);
+        fprintf(stderr, MAKE_RED "Error writing %s\n" RESET_COLOR, the_file);
         return rc;
     }
 
     rc = read(fp, respbuf, sizeof(respbuf));
     if (rc == -1) {
-        K_PRINT("Error reading %s\n", the_file);
+        fprintf(stderr, MAKE_RED "Error reading %s\n" RESET_COLOR, the_file);
         return rc;
     }
 
     return rc;
+}
+//
+//--------------------------------------------------------------------------//
+
+//--------------------IMPLEMENTATION OF getch() ----------------------------//
+//
+int k_Getch()
+{
+    static struct termios oldterm, newterm;
+
+    int ch;
+
+    tcgetattr(0, &oldterm);
+    newterm = oldterm;
+    newterm.c_lflag &= ~ICANON;
+    newterm.c_lflag &= ~ECHO;
+    tcsetattr(0, TCSANOW, &newterm);
+
+    ch = getchar();
+
+    tcsetattr(0, TCSANOW, &oldterm);
+
+    return ch == CONTROL('d') ? EOF : ch;
 }
 //
 //--------------------------------------------------------------------------//
@@ -105,10 +131,9 @@ int k_GetQuery(char* query, size_t max_query_len)
 {
     int i = 0, rc = 0;
 
-    attron(A_BOLD);
     while (1) {
-        int ch = getch();
-        if (ch == EOF || ch == CONTROL('d')) {
+        int ch = k_Getch();
+        if (ch == EOF) {
             rc = -1;
             break;
         }
@@ -116,35 +141,30 @@ int k_GetQuery(char* query, size_t max_query_len)
         if (ch == '\n') {
             if (strcmp(query, ".quit") == 0) {
                 rc = -1;
-                K_PRINT("\n");
+                fprintf(stdout, "\n");
                 break;
             }
 
             if (query[i-1] == ';') {
-                K_PRINT("\n");
+                fprintf(stdout, "\n");
                 break;
             }
 
             k_InsertIntoStr(' ', query, i++, max_query_len);
-            K_PRINT("\n   ...> ");
+            fprintf(stdout, "\n   ...> ");
 
             continue;
-        } else if (ch == KEY_BACKSPACE) {
+        } else if (ch == BACKSPACE || ch == DELETE) {
             if (i != 0) {
                 k_Backspace(query);
-
-                addch('\b');
-                delch();
-                refresh();
-
+                fprintf(stdout, "\b\033[K");
                 i--;
             }
         } else {
             k_InsertIntoStr(ch, query, i++, max_query_len);
-            K_PRINT("%c", ch);
+            fprintf(stdout, "%c", ch);
         }
     }
-    attroff(A_BOLD);
 
     return rc;
 }
@@ -158,11 +178,11 @@ int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName)
 {
     int i;
     for (i = 0; i < argc; i++){
-        K_PRINT("%s", argv[i] ? argv[i] : "NULL");
+        fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
         if (i != argc-1)
-            K_PRINT("|");
+            fprintf(stdout, "|");
     }
-    K_PRINT("\n");
+    fprintf(stdout, "\n");
 
     return 0;
 }
@@ -182,7 +202,7 @@ int main()
     strcat(the_file, "/");
     strcat(the_file, file_name);
     if ((fp = open(the_file, O_RDWR)) == -1) {
-        fprintf(stderr, "Error opening %s\n", the_file);
+        fprintf(stderr, MAKE_RED "Error opening %s\n" RESET_COLOR, the_file);
         close(fp);
         exit(-1);
     }
@@ -190,30 +210,15 @@ int main()
     /* Open database */
     rc = sqlite3_open(NULL, &db);   // NULL filepath creates an in-memory database
     if (rc) {
-        fprintf(stderr, "Can't open kquery database: %s\n", sqlite3_errmsg(db));
+        fprintf(stderr, MAKE_RED "Can't open kquery database: %s\n" RESET_COLOR, sqlite3_errmsg(db));
         sqlite3_close(db);
         close(fp);
         exit(-1);
     }
 
-    /* Initialize ncurses */
-    initscr();
-    start_color();
-    use_default_colors();
-    init_pair(1, COLOR_GREEN, -1);
-    keypad(stdscr, TRUE);
-    cbreak();
-    noecho();
-    scrollok(stdscr, TRUE);
-
     /* Enter REPL */
     while (1) {
-        /* Print prompt */
-        attron(A_BOLD);
-        attron(COLOR_PAIR(1));
-        K_PRINT("kquery> ");
-        attroff(A_BOLD);
-        attroff(COLOR_PAIR(1));
+        fprintf(stdout, MAKE_GREEN "kquery> " RESET_COLOR);
 
         /* Get query from stdin */
         query[0] = '\0';
@@ -233,7 +238,7 @@ int main()
                       ")";
         rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            K_PRINT("SQL error : %s\n", error_msg);
+            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
             sqlite3_free(error_msg);
         }
 
@@ -250,7 +255,7 @@ int main()
             /* Insert row into table */
             rc = sqlite3_exec(db, respbuf, NULL, 0, &error_msg);
             if (rc != SQLITE_OK) {
-                K_PRINT("SQL error: %s\n", error_msg);
+                fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
                 sqlite3_free(error_msg);
             }
         }
@@ -258,14 +263,14 @@ int main()
         /* Execute query */
         rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            K_PRINT("SQL error: %s\n", error_msg);
+            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
             sqlite3_free(error_msg);
         }
 
         /* Reset table */
         rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
         if (rc != SQLITE_OK) {
-            K_PRINT("SQL error: %s\n", error_msg);
+            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
             sqlite3_free(error_msg);
         }
     }
@@ -273,7 +278,6 @@ int main()
 	/* Cleanup */
     sqlite3_close(db);
     close(fp);
-	endwin();
 
     return 0;
 }
