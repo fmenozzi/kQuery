@@ -14,7 +14,7 @@ if make; then
 		echo -e "${GREEN}Done${RESET}"
 		echo -e "${GREEN}Building kquery...${RESET}"
 		cd ..
-		if gcc sqlite3.c kquery.c -o kquery -ldl -lpthread; then
+		if ./compile.sh; then
 			echo -e "${GREEN}Done${RESET}"
 		else
 			echo -e "${RED}Failed to build kquery${RESET}"
