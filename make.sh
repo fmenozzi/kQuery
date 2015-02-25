@@ -4,7 +4,7 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
-echo -e "${GREEN}Building module...${RESET}"
+sudo echo -e "${GREEN}Building module...${RESET}"
 cd module
 ./unload.sh
 if make; then
