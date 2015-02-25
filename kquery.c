@@ -130,6 +130,7 @@ void k_Backspace(char* str)
 int k_GetQuery(char* query, size_t max_query_len)
 {
     int i = 0, rc = 0;
+    char space_placeholder_char = '@';
 
     while (1) {
         int ch = k_Getch();
@@ -150,12 +151,12 @@ int k_GetQuery(char* query, size_t max_query_len)
                 break;
             }
 
-            k_InsertIntoStr(' ', query, i++, max_query_len);
+            k_InsertIntoStr(space_placeholder_char, query, i++, max_query_len);
             fprintf(stdout, "\n   ...> ");
 
             continue;
         } else if (ch == BACKSPACE || ch == DELETE) {
-            if (i != 0) {
+            if (i != 0 && query[i-1] != space_placeholder_char) {
                 k_Backspace(query);
                 fprintf(stdout, "\b\033[K");
                 i--;
@@ -165,6 +166,12 @@ int k_GetQuery(char* query, size_t max_query_len)
             fprintf(stdout, "%c", ch);
         }
     }
+
+    /* Replace space placeholder char with space */
+    int len = strlen(query);
+    for (i = 0; i < len; i++)
+        if (query[i] == space_placeholder_char)
+            query[i] = ' ';
 
     return rc;
 }
@@ -221,7 +228,6 @@ int main()
         fprintf(stdout, MAKE_GREEN "kquery> " RESET_COLOR);
 
         /* Get query from stdin */
-        query[0] = '\0';
         if (k_GetQuery(query, MAX_QUERY_LEN) == -1)
             break;
 
