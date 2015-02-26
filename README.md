@@ -5,9 +5,7 @@ A SQL interface to your Linux kernel. Think of it like a Linux-only [osquery](ht
 
 ## Building from Source
 1. Building from source involves building the kernel module, loading it, and then building the user program. You can use the script `make.sh` to perform all three tasks at once, or you can use the `load.sh` and `compile.sh` scripts to perform the tasks separately. As a note, you may need to use the `chmod` command to make the scripts executable. 
-2. To run the shell, execute:
-        
-          $ sudo ./kquery
+2. Use `sudo ./kquery` to run the shell
 
 ## Current Features
   * `.quit` and `CTRL-D` to exit the shell
