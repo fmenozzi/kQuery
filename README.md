@@ -4,18 +4,8 @@ kQuery
 A SQL interface to your Linux kernel. Think of it like a Linux-only [osquery](http://osquery.io), but with fewer and less-robust tables (but we don't require vagrant or VMs, so we got that going for us, which is nice).
 
 ## Building from Source
-1. First, we have to load the kernel module. Navigate to the `module` directory and execute the following commands:
-
-          $ make
-          $ sudo insmod kquery_mod.ko
-    
-  Alternatively, the scripts `load.sh` (and `unload.sh`) are provided for your convenience.
-    
-2. Next, we need to compile the user program:
-
-          $ gcc sqlite3.c kquery.c -o kquery -lpthread -ldl
-
-3. To run the shell, execute:
+1. Building from source involves building the kernel module, loading it, and then building the user program. You can use the script `make.sh` to perform all three tasks at once, or you can use the `load.sh` and `compile.sh` scripts to perform the tasks separately. As a note, you may need to use the `chmod` command to make the scripts executable. 
+2. To run the shell, execute:
         
           $ sudo ./kquery
 
