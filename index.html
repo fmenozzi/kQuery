@@ -1,35 +1,33 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
     <title>kQuery by fmenozzi</title>
-
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1 class="header">kQuery</h1>
-        <p class="header">A SQL interface to your Linux kernel</p>
 
-        <ul>
-          <li class="download"><a class="buttons" href="https://github.com/fmenozzi/kQuery/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/fmenozzi/kQuery/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/fmenozzi/kQuery">View On GitHub</a></li>
-        </ul>
+    <header>
+      <div class="container">
+        <h1>kQuery</h1>
+        <h2>A SQL interface to your Linux kernel</h2>
 
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/fmenozzi">fmenozzi</a></p>
+        <section id="downloads">
+          <a href="https://github.com/fmenozzi/kQuery/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/fmenozzi/kQuery/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/fmenozzi/kQuery" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
 
-
-      </header>
-      <section>
+    <div class="container">
+      <section id="main_content">
         <h1>
 <a id="kquery" class="anchor" href="#kquery" aria-hidden="true"><span class="octicon octicon-link"></span></a>kQuery</h1>
 
@@ -39,27 +37,8 @@
 <a id="building-from-source" class="anchor" href="#building-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building from Source</h2>
 
 <ol>
-<li>
-<p>First, we have to load the kernel module. Navigate to the <code>module</code> directory and execute the following commands:</p>
-
-<pre><code>  $ make
-  $ sudo insmod kquery_mod.ko
-</code></pre>
-
-<p>Alternatively, the scripts <code>load.sh</code> (and <code>unload.sh</code>) are provided for your convenience.</p>
-</li>
-<li>
-<p>Next, we need to compile the user program:</p>
-
-<pre><code>  $ gcc sqlite3.c kquery.c -o kquery -Wall -lpthread -ldl
-</code></pre>
-</li>
-<li>
-<p>To run the shell, execute:</p>
-
-<pre><code>  $ sudo ./kquery
-</code></pre>
-</li>
+<li>Building from source involves building the kernel module, loading it, and then building the user program. You can use the script <code>make.sh</code> to perform all three tasks at once, or you can use the <code>load.sh</code> and <code>compile.sh</code> scripts to perform the tasks separately. As a note, you may need to use the <code>chmod</code> command to make the scripts executable. </li>
+<li>Use <code>sudo ./kquery</code> to run the shell</li>
 </ol>
 
 <h2>
@@ -67,7 +46,7 @@
 
 <ul>
 <li>
-<code>.quit</code> to exit the shell</li>
+<code>.quit</code> and <code>CTRL-D</code> to exit the shell</li>
 <li>
 <p>The following tables:</p>
 
@@ -135,11 +114,8 @@
 
 <p>kQuery is licensed under the <a href="https://www.gnu.org/licenses/gpl-2.0.html">GNU General Public License, version 2</a>.</p>
       </section>
-      <footer>
-        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
-      </footer>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
+
+    
   </body>
 </html>
