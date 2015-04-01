@@ -218,7 +218,8 @@ int main()
 
     /* Enter REPL */
     while (1) {
-        fprintf(stdout, MAKE_GREEN "kquery> " RESET_COLOR);
+        //fprintf(stdout, MAKE_GREEN "kquery> " RESET_COLOR);
+        fprintf(stdout, "kquery> ");
 
         /* Get query from stdin */
         if (k_GetQuery(query, MAX_QUERY_LEN) == -1)
