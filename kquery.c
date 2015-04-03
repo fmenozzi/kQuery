@@ -103,7 +103,7 @@ int k_Getch()
 //------------------- ACQUIRING QUERY STRING FROM CONSOLE ------------------//
 //
 /* Insert c into str at index pos */
-void k_InsertIntoStr(char c, char* str, size_t pos, size_t max_len)
+void k_InsertCharIntoStr(char c, char* str, size_t pos, size_t max_len)
 {
     int char_fits = pos   < max_len;
     int null_fits = pos+1 < max_len;
@@ -118,6 +118,13 @@ void k_InsertIntoStr(char c, char* str, size_t pos, size_t max_len)
     } else {
         str[pos] = '\0';
     }
+}
+
+void k_InsertStrIntoStr(char* suf, char* str, size_t pos, size_t max_len)
+{
+    int i, len = strlen(suf);
+    for (i = 0; i < len; i++)
+        k_InsertCharIntoStr(suf[i], str, pos++, max_len);
 }
 
 /* Remove last char in str */
@@ -150,7 +157,7 @@ int k_GetQueryFromStdin(char* query, size_t max_query_len)
                 break;
             }
 
-            k_InsertIntoStr('\n', query, i++, max_query_len);
+            k_InsertCharIntoStr('\n', query, i++, max_query_len);
             fprintf(stdout, "\n   ...> ");
 
             continue;
@@ -161,7 +168,7 @@ int k_GetQueryFromStdin(char* query, size_t max_query_len)
                 i--;
             }
         } else {
-            k_InsertIntoStr(ch, query, i++, max_query_len);
+            k_InsertCharIntoStr(ch, query, i++, max_query_len);
             fprintf(stdout, "%c", ch);
         }
     }
@@ -172,9 +179,35 @@ int k_GetQueryFromStdin(char* query, size_t max_query_len)
 /* Fill query string from shortened command line arg */
 int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
 {
+    char* select_         = "SELECT ";
+    char* select_distict_ = "SELECT DISTINCT ";
+    char* from_           = "FROM ";
+    char* where_          = "WHERE ";
+
     int ai, qi = 0, len = strlen(arg);
     for (ai = 0; ai < len; ai++) {
-        k_InsertIntoStr(arg[ai], query, qi++, max_query_len);
+        if (arg[ai] == '@') {
+            ai++;
+            if (arg[ai] == 'S') {
+                if (arg[ai+1] == 'D') {
+                    ai++;
+                    k_InsertStrIntoStr(select_distict_, query, qi, max_query_len);
+                    qi += strlen(select_distict_);
+                } else {
+                    k_InsertStrIntoStr(select_, query, qi, max_query_len);
+                    qi += strlen(select_);
+                }
+            } else if (arg[ai] == 'F') {
+                k_InsertStrIntoStr(from_, query, qi, max_query_len);
+                qi += strlen(from_);
+            } else if (arg[ai] == 'W') {
+                k_InsertStrIntoStr(where_, query, qi, max_query_len);
+                qi += strlen(where_);
+            }
+            ai++;
+        } else {
+            k_InsertCharIntoStr(arg[ai], query, qi++, max_query_len);
+        }
     }
     return 1;
 }
