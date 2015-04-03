@@ -36,9 +36,14 @@
 <h2>
 <a id="building-from-source" class="anchor" href="#building-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building from Source</h2>
 
+<p>Building from source involves building the kernel module, loading it, and then building the user program. You can use the script <code>make.sh</code> to perform all three tasks at once, or you can use the <code>load.sh</code> and <code>compile.sh</code> scripts to perform the tasks separately. As a note, you may need to use the <code>chmod</code> command to make the scripts executable. </p>
+
+<h2>
+<a id="use" class="anchor" href="#use" aria-hidden="true"><span class="octicon octicon-link"></span></a>Use</h2>
+
 <ol>
-<li>Building from source involves building the kernel module, loading it, and then building the user program. You can use the script <code>make.sh</code> to perform all three tasks at once, or you can use the <code>load.sh</code> and <code>compile.sh</code> scripts to perform the tasks separately. As a note, you may need to use the <code>chmod</code> command to make the scripts executable. </li>
 <li>Use <code>sudo ./kquery</code> to run the shell</li>
+<li>Use <code>sudo ./kquery "query"</code> to run individual queries</li>
 </ol>
 
 <h2>
@@ -47,6 +52,31 @@
 <ul>
 <li>
 <code>.quit</code> and <code>CTRL-D</code> to exit the shell</li>
+<li>Use in UNIX pipelines
+
+<ul>
+<li>When running a single query via command line, columns are separated by <code>_</code>
+</li>
+<li>To help shorten command lengths, you can use the following <code>@</code> notation:
+
+<ul>
+<li>
+<code>@S</code>  = <code>SELECT</code>
+</li>
+<li>
+<code>@SD</code> = <code>SELECT DISTINCT</code>
+</li>
+<li>
+<code>@F</code>  = <code>FROM</code>
+</li>
+<li>
+<code>@W</code>  = <code>WHERE</code>
+</li>
+</ul>
+</li>
+<li>Results can be piped. For example, <code>sudo ./kquery "@S name @F Process" | sort</code> will print the names of all processes alphabetically</li>
+</ul>
+</li>
 <li>
 <p>The following tables:</p>
 
