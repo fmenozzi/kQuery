@@ -183,8 +183,8 @@ int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
 
 //--------------------------- DATABASE CALLBACKS ---------------------------//
 //
-/* Callback function for query execution */
-int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName) 
+/* Callback function for query execution in REPL*/
+int k_QueryCallbackREPL(void *NotUsed, int argc, char **argv, char **azColName) 
 {
     int i;
     for (i = 0; i < argc; i++){
@@ -195,6 +195,20 @@ int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName)
     fprintf(stdout, "\n");
 
     return 0;
+}
+
+/* Callback function for query execution in pipeline */
+int k_QueryCallbackPipeline(void *NotUsed, int argc, char **argv, char **azColName)
+{
+    int i;
+    for (i = 0; i < argc; i++){
+        fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
+        if (i != argc-1)
+            fprintf(stdout, "_");
+    }
+    fprintf(stdout, "\n");
+
+    return 0;   
 }
 //
 //--------------------------------------------------------------------------//
@@ -274,10 +288,10 @@ int k_ResetProcessTable(sqlite3* db)
 }
 
 /* Execute query */
-int k_ExecuteQuery(sqlite3* db, char* query)
+int k_ExecuteQuery(sqlite3* db, char* query, int(*callback)(void*, int, char**, char**))
 {
     char* error_msg = NULL;
-    int rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
+    int rc = sqlite3_exec(db, query, callback, 0, &error_msg);
     if (rc != SQLITE_OK) {
         fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
         sqlite3_free(error_msg);
@@ -309,7 +323,7 @@ int main(int argc, char* argv[])
 
         k_CreateProcessTable(db);
         if (k_PopulateProcessTable(db) == SQLITE_OK)
-            k_ExecuteQuery(db, query);
+            k_ExecuteQuery(db, query, k_QueryCallbackPipeline);
     } else if (argc == 1) {
         /* Enter REPL */
         while (1) {
@@ -320,7 +334,7 @@ int main(int argc, char* argv[])
 
             k_CreateProcessTable(db);
             if (k_PopulateProcessTable(db) == SQLITE_OK);
-                k_ExecuteQuery(db, query);
+                k_ExecuteQuery(db, query, k_QueryCallbackREPL);
             k_ResetProcessTable(db);
         }
     } else {
