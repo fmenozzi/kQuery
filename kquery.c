@@ -127,7 +127,7 @@ void k_Backspace(char* str)
 }
 
 /* Fill query string from stdin */
-int k_GetQuery(char* query, size_t max_query_len)
+int k_GetQueryFromStdin(char* query, size_t max_query_len)
 {
     int i = 0, rc = 0;
 
@@ -168,6 +168,16 @@ int k_GetQuery(char* query, size_t max_query_len)
 
     return rc;
 }
+
+/* Fill query string from shortened command line arg */
+int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
+{
+    int ai, qi = 0, len = strlen(arg);
+    for (ai = 0; ai < len; ai++) {
+        k_InsertIntoStr(arg[ai], query, qi++, max_query_len);
+    }
+    return 1;
+}
 //
 //--------------------------------------------------------------------------//
 
@@ -189,13 +199,98 @@ int k_QueryCallback(void *NotUsed, int argc, char **argv, char **azColName)
 //
 //--------------------------------------------------------------------------//
 
-int main()
+//------------------------------ SQLITE WRAPPERS ---------------------------//
+//
+/* Open database */
+sqlite3* k_SQLiteOpen(sqlite3* db)
 {
-    sqlite3* db;
+    int rc = sqlite3_open(NULL, &db);   // NULL filepath for in-memory database
+    if (rc) {
+        fprintf(stderr, MAKE_RED "Can't open kquery database: %s\n" RESET_COLOR, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        close(fp);
+        exit(-1);
+    }
+    return db;
+}
+
+/* Create Process table */
+int k_CreateProcessTable(sqlite3* db)
+{
+    char* error_msg = NULL;
+    char *create_stmt  = "CREATE TABLE IF NOT EXISTS Process ("
+                         "  pid        INT PRIMARY KEY,"
+                         "  name       TEXT,"
+                         "  parent_pid INT,"
+                         "  state      BIGINT,"
+                         "  flags      BIGINT,"
+                         "  priority   INT,"
+                         "  num_vmas   INT,"
+                         "  total_vm   BIGINT"
+                         ")";
+    int rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
+        sqlite3_free(error_msg);
+    }
+    return rc;
+}
+
+/* Populate Process table */
+int k_PopulateProcessTable(sqlite3* db)
+{
+    char* error_msg = NULL;
+    int rc = k_DoSyscall("process_get_row");  // First call returns number of rows
+    if (rc == -1)
+        return rc;
+
+    while (strcmp(respbuf, "")) {
+        /* Fetch row */
+        rc = k_DoSyscall("process_get_row");  // Subsequent calls fetch rows
+        if (rc == -1)
+            break;
+        
+        /* Insert row into table */
+        rc = sqlite3_exec(db, respbuf, NULL, 0, &error_msg);
+        if (rc != SQLITE_OK) {
+            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
+            sqlite3_free(error_msg);
+        }
+    }
+
+    return rc;
+}
+
+/* Reset Process table */
+int k_ResetProcessTable(sqlite3* db)
+{
+    char* error_msg = NULL;
+    int rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
+        sqlite3_free(error_msg);
+    }
+    return rc;
+}
+
+/* Execute query */
+int k_ExecuteQuery(sqlite3* db, char* query)
+{
+    char* error_msg = NULL;
+    int rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
+        sqlite3_free(error_msg);
+    }
+    return rc;
+}
+//
+//--------------------------------------------------------------------------//
+
+int main(int argc, char* argv[])
+{
+    sqlite3* db = NULL;
     char query[MAX_QUERY_LEN];
-    int rc;
-    char* create_stmt;
-    char* error_msg = 0;
 
     /* Open the file (module) */
     strcat(the_file, dir_name);
@@ -207,72 +302,29 @@ int main()
         exit(-1);
     }
 
-    /* Open database */
-    rc = sqlite3_open(NULL, &db);   // NULL filepath creates an in-memory database
-    if (rc) {
-        fprintf(stderr, MAKE_RED "Can't open kquery database: %s\n" RESET_COLOR, sqlite3_errmsg(db));
-        sqlite3_close(db);
-        close(fp);
-        exit(-1);
-    }
+    db = k_SQLiteOpen(db);
 
-    /* Enter REPL */
-    while (1) {
-        //fprintf(stdout, MAKE_GREEN "kquery> " RESET_COLOR);
-        fprintf(stdout, "kquery> ");
+    if (argc == 2) {
+        k_GetQueryFromCommandLine(query, argv[1], MAX_QUERY_LEN);
 
-        /* Get query from stdin */
-        if (k_GetQuery(query, MAX_QUERY_LEN) == -1)
-            break;
+        k_CreateProcessTable(db);
+        if (k_PopulateProcessTable(db) == SQLITE_OK)
+            k_ExecuteQuery(db, query);
+    } else if (argc == 1) {
+        /* Enter REPL */
+        while (1) {
+            fprintf(stdout, "kquery> ");
 
-        /* Create Process table (in case user does some stupid query to delete it) */
-        create_stmt = "CREATE TABLE IF NOT EXISTS Process ("
-                      "  pid        INT PRIMARY KEY,"
-                      "  name       TEXT,"
-                      "  parent_pid INT,"
-                      "  state      BIGINT,"
-                      "  flags      BIGINT,"
-                      "  priority   INT,"
-                      "  num_vmas   INT,"
-                      "  total_vm   BIGINT"
-                      ")";
-        rc = sqlite3_exec(db, create_stmt, NULL, 0, &error_msg);
-        if (rc != SQLITE_OK) {
-            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
-            sqlite3_free(error_msg);
-        }
-
-        /* Populate table */
-        rc = k_DoSyscall("process_get_row");  // First call returns number of rows
-        if (rc == -1)
-            break;
-        while (strcmp(respbuf, "")) {
-            /* Fetch row */
-            rc = k_DoSyscall("process_get_row");  // Subsequent calls fetch rows
-            if (rc == -1)
+            if (k_GetQueryFromStdin(query, MAX_QUERY_LEN) == -1)
                 break;
-            
-            /* Insert row into table */
-            rc = sqlite3_exec(db, respbuf, NULL, 0, &error_msg);
-            if (rc != SQLITE_OK) {
-                fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
-                sqlite3_free(error_msg);
-            }
-        }
 
-        /* Execute query */
-        rc = sqlite3_exec(db, query, k_QueryCallback, 0, &error_msg);
-        if (rc != SQLITE_OK) {
-            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
-            sqlite3_free(error_msg);
+            k_CreateProcessTable(db);
+            if (k_PopulateProcessTable(db) == SQLITE_OK);
+                k_ExecuteQuery(db, query);
+            k_ResetProcessTable(db);
         }
-
-        /* Reset table */
-        rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
-        if (rc != SQLITE_OK) {
-            fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
-            sqlite3_free(error_msg);
-        }
+    } else {
+        printf("Incorrect number of arguments\n");
     }
 
 	/* Cleanup */
