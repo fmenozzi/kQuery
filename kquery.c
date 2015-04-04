@@ -249,8 +249,9 @@ int k_QueryCallbackPipeline(void *NotUsed, int argc, char **argv, char **azColNa
 //------------------------------ SQLITE WRAPPERS ---------------------------//
 //
 /* Open database */
-sqlite3* k_SQLiteOpen(sqlite3* db)
+sqlite3* k_SQLiteOpen()
 {
+    sqlite3* db = NULL;
     int rc = sqlite3_open(NULL, &db);   // NULL filepath for in-memory database
     if (rc) {
         fprintf(stderr, MAKE_RED "Can't open kquery database: %s\n" RESET_COLOR, sqlite3_errmsg(db));
@@ -336,7 +337,6 @@ int k_ExecuteQuery(sqlite3* db, char* query, int(*callback)(void*, int, char**, 
 
 int main(int argc, char* argv[])
 {
-    sqlite3* db = NULL;
     char query[MAX_QUERY_LEN];
 
     /* Open the file (module) */
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    db = k_SQLiteOpen(db);
+    sqlite3* db = k_SQLiteOpen();
 
     if (argc == 2) {
         k_GetQueryFromCommandLine(query, argv[1], MAX_QUERY_LEN);
