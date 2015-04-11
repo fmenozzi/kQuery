@@ -220,7 +220,7 @@ int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
 int k_QueryCallbackREPL(void *NotUsed, int argc, char **argv, char **azColName) 
 {
     int i;
-    for (i = 0; i < argc; i++){
+    for (i = 0; i < argc; i++) {
         fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
         if (i != argc-1)
             fprintf(stdout, "|");
@@ -234,7 +234,7 @@ int k_QueryCallbackREPL(void *NotUsed, int argc, char **argv, char **azColName)
 int k_QueryCallbackPipeline(void *NotUsed, int argc, char **argv, char **azColName)
 {
     int i;
-    for (i = 0; i < argc; i++){
+    for (i = 0; i < argc; i++) {
         fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
         if (i != argc-1)
             fprintf(stdout, "_");
