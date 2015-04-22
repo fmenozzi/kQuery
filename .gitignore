@@ -1,0 +1,7 @@
+kquery
+*~
+*.mod.*
+module/*.ko*
+module/*.o*
+module/Module.symvers
+module/.tmp_versions/*
