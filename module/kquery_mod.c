@@ -82,7 +82,7 @@ static void process_get_row(char *buf)
                 }
 
                 sprintf(buf, 
-                "INSERT INTO Process VALUES (%d,'%s',%d,%ld,%u,%d,%d,%lu);", 
+                "INSERT INTO process VALUES (%d,'%s',%d,%ld,%u,%d,%d,%lu);", 
 							pid, 
 							comm, 
 							parent_pid, 

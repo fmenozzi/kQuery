@@ -266,7 +266,7 @@ sqlite3* k_SQLiteOpen()
 int k_CreateProcessTable(sqlite3* db)
 {
     char* error_msg = NULL;
-    char *create_stmt  = "CREATE TABLE IF NOT EXISTS Process ("
+    char *create_stmt  = "CREATE TABLE IF NOT EXISTS process ("
                          "  pid        INT PRIMARY KEY,"
                          "  name       TEXT,"
                          "  parent_pid INT,"
@@ -313,7 +313,7 @@ int k_PopulateProcessTable(sqlite3* db)
 int k_ResetProcessTable(sqlite3* db)
 {
     char* error_msg = NULL;
-    int rc = sqlite3_exec(db, "DELETE FROM Process;", NULL, 0, &error_msg);
+    int rc = sqlite3_exec(db, "DELETE FROM process;", NULL, 0, &error_msg);
     if (rc != SQLITE_OK) {
         fprintf(stdout, MAKE_RED "SQL error: %s\n" RESET_COLOR, error_msg);
         sqlite3_free(error_msg);
