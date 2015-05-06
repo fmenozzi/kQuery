@@ -188,8 +188,8 @@ int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
     for (ai = 0; ai < len; ai++) {
         if (arg[ai] == '@') {
             ai++;
-            if (arg[ai] == 'S') {
-                if (arg[ai+1] == 'D') {
+            if (arg[ai] == 'S' || arg[ai] == 's') {
+                if (arg[ai+1] == 'D' || arg[ai] == 'd') {
                     ai++;
                     k_InsertStrIntoStr(select_distict_, query, qi, max_query_len);
                     qi += strlen(select_distict_);
@@ -197,10 +197,10 @@ int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
                     k_InsertStrIntoStr(select_, query, qi, max_query_len);
                     qi += strlen(select_);
                 }
-            } else if (arg[ai] == 'F') {
+            } else if (arg[ai] == 'F' || arg[ai] == 'f') {
                 k_InsertStrIntoStr(from_, query, qi, max_query_len);
                 qi += strlen(from_);
-            } else if (arg[ai] == 'W') {
+            } else if (arg[ai] == 'W' || arg[ai] == 'w') {
                 k_InsertStrIntoStr(where_, query, qi, max_query_len);
                 qi += strlen(where_);
             }
