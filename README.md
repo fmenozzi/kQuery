@@ -14,10 +14,10 @@ Building from source involves building the kernel module, loading it, and then b
   * Use in UNIX pipelines
       * When running a single query via command line, columns are separated by `_`
       * To help shorten command lengths, you can use the following `@` notation:
-          * `@S`  = `SELECT`
-          * `@SD` = `SELECT DISTINCT`
-          * `@F`  = `FROM`
-          * `@W`  = `WHERE`
+          * `@S`/`@s`   = `SELECT`
+          * `@SD`/`@sd` = `SELECT DISTINCT`
+          * `@F`/`@f`   = `FROM`
+          * `@W`/`@w`   = `WHERE`
       * Results can be piped. For example, `sudo ./kquery "@S name @F Process" | sort` will print the names of all processes alphabetically
   * The following tables:
       * **Process**
