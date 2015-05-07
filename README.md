@@ -20,7 +20,7 @@ Building from source involves building the kernel module, loading it, and then b
           * `@W`/`@w`   = `WHERE`
       * Results can be piped. For example, `sudo ./kquery "@S name @F Process" | sort` will print the names of all processes alphabetically
   * The following tables:
-      * **Process**
+      * **process**
     
           Column     | Type
           ---------- | ----
