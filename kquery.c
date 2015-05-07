@@ -189,7 +189,7 @@ int k_GetQueryFromCommandLine(char* query, char* arg, size_t max_query_len)
         if (arg[ai] == '@') {
             ai++;
             if (arg[ai] == 'S' || arg[ai] == 's') {
-                if (arg[ai+1] == 'D' || arg[ai] == 'd') {
+                if (arg[ai+1] == 'D' || arg[ai+1] == 'd') {
                     ai++;
                     k_InsertStrIntoStr(select_distict_, query, qi, max_query_len);
                     qi += strlen(select_distict_);
