@@ -133,6 +133,24 @@ void k_Backspace(char* str)
     str[strlen(str) - 1] = '\0';
 }
 
+/* Determine if char is valid in REPL */
+int k_InvalidChar(char ch)
+{
+    // Letters and numbers are fine
+    if (('A' <= ch && ch <= 'Z') ||
+        ('a' <= ch && ch <= 'z') ||
+        ('0' <= ch && ch <= '9'))
+        return 0;
+
+    // Check remaining possible valid chars
+    char* valid = " @%*()_-+=<>,.?;'\"";
+    int i, len = strlen(valid);
+    for (i = 0; i < len; i++)
+       if (ch == valid[i])
+          return 0;
+   return -1;
+}
+
 /* Fill query string from stdin */
 int k_GetQueryFromStdin(char* query, size_t max_query_len)
 {
@@ -171,6 +189,9 @@ int k_GetQueryFromStdin(char* query, size_t max_query_len)
             k_InsertCharIntoStr(' ', query, i++, max_query_len);
             fprintf(stdout, " ");
         } else {
+            if (k_InvalidChar(ch))
+                continue;
+
             k_InsertCharIntoStr(ch, query, i++, max_query_len);
             fprintf(stdout, "%c", ch);
         }
@@ -269,7 +290,7 @@ sqlite3* k_SQLiteOpen()
 int k_CreateProcessTable(sqlite3* db)
 {
     char* error_msg = NULL;
-    char *create_stmt  = "CREATE TABLE IF NOT EXISTS process ("
+    char* create_stmt  = "CREATE TABLE IF NOT EXISTS process ("
                          "  pid        INT PRIMARY KEY,"
                          "  name       TEXT,"
                          "  parent_pid INT,"
