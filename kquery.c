@@ -167,6 +167,9 @@ int k_GetQueryFromStdin(char* query, size_t max_query_len)
                 fprintf(stdout, "\b\033[K");
                 i--;
             }
+        } else if (ch == '\t') {
+            k_InsertCharIntoStr(' ', query, i++, max_query_len);
+            fprintf(stdout, " ");
         } else {
             k_InsertCharIntoStr(ch, query, i++, max_query_len);
             fprintf(stdout, "%c", ch);
