@@ -261,7 +261,7 @@ int k_QueryCallbackPipeline(void *NotUsed, int argc, char **argv, char **azColNa
     for (i = 0; i < argc; i++) {
         fprintf(stdout, "%s", argv[i] ? argv[i] : "NULL");
         if (i != argc-1)
-            fprintf(stdout, "_");
+            fprintf(stdout, "__");
     }
     fprintf(stdout, "\n");
 
