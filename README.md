@@ -12,7 +12,7 @@ Building from source involves building the kernel module, loading it, and then b
 ## Current Features
   * `.quit` and `CTRL-D` to exit the shell
   * Use in UNIX pipelines
-      * When running a single query via command line, columns are separated by `_`
+      * When running a single query via command line, columns are separated by `__` (double underscore)
       * To help shorten command lengths, you can use the following `@` notation:
           * `@S`/`@s`   = `SELECT`
           * `@SD`/`@sd` = `SELECT DISTINCT`
